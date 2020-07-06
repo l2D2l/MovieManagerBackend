@@ -32,43 +32,65 @@ app.post('/cossas', (req, res) => res.send({
 
 app.post('/movies/:id', async(req, res) => {
     
-    console.log("ENTRO /movies/:id")
-    // const id = req.params.id;
-    // const movieRef  = db.collection('movies').doc( id );
-    // const movieSnap = await movieRef.get();
-    // if ( !movieSnap.exists ) {
-    //     res.status(404).json({
-    //         ok: false,
-    //         mensaje: 'No existe una pelicula con ese ID ' + id
-    //     });
-    // } else {
+    console.log("[request]",req.body.body)
+    try{
+        const id = req.params.id;
+        const movieRef  = db.collection('movies').doc( id );
 
-    //     const antes = movieSnap.data() || { };
-       
-    //     console.log("[/movies/:id]",req)
-    //     switch(req.body.action){
-    //         case 'edit':await movieRef.update(req.body.request);break;
-    //         case 'delete':await movieRef.update(req.body.request);break;
-    //     }
-    //     res.json({
-    //         ok: true,
-    //         mensaje: `Actualización exitosa a ${ antes.name }`
-    //     });
+        const movieSnap = await movieRef.get();
+        
+        if ( !movieSnap.exists ) {
+            res.status(404).json({
+                ok: false,
+                mensaje: 'No existe una pelicula con ese ID ' + id
+            });
+        } else {
 
-    // }
-    res.json( {
-        "message":'Hola'
-    } );
+            const antes = movieSnap.data() || { };
+            
+            switch(req.body.body.action){
+                case 'edit':{
+                    console.log("edit")
+                    await movieRef.update(req.body.body.request);
+                }break;
+                case 'delete':{
+                    await movieRef.delete();}break;
+            }
+            res.json({
+                ok: true,
+                mensaje: `Operación exitosa a ${ antes.name }`
+            });
+
+        }
+    }catch(e){
+        console.log("error",e)
+    }
+    
+   
 });
 
-// app.post('/movies/add', async(req, res) => {
+app.post('/add-movies', async(req, res) => {
 
-//    console.log("[/movies/add]",req)
-//     await db.collection('movies').add(req.body)
-    
-//     res.json({
-//         ok: true,
-//         mensaje: `Se añadio exitosamente`
-//     });
-// });
+    try{
+        console.log("[/movies/add]",req)
+     
+        const id=await db.collection("collection").doc().id
+
+        console.log("[id]",id)
+        db.collection("movies").doc(id).set({
+            name:req.body.body.request.name,
+            state:req.body.body.request.state,
+            publicationDate:req.body.body.request.publicationDate,
+            id:id
+        })
+
+        res.json({
+            ok: true,
+            mensaje: `Se añadio exitosamente`
+        });
+    }catch(e){
+        console.log("No se logro añadir",e)
+    }
+   
+});
 export const api = functions.https.onRequest( app );
